@@ -8,6 +8,12 @@ import { getInstantCalendarYmd, getYesterdayYmd } from "@/src/lib/raffleDates";
 export type RaffleParticipant = {
   key: string;
   label: string;
+  name: string;
+  instagram: string;
+  email: string;
+  /** Linhas do formulário agregadas neste participante. */
+  submissionCount: number;
+  /** Soma dos tickets (US$ inteiros depositados). */
   tickets: number;
 };
 
@@ -38,6 +44,23 @@ function displayLabel(name: string, instagram: string): string {
     return n ? `${n} (${handle})` : handle;
   }
   return n;
+}
+
+function mergeEmails(existing: string, next: string): string {
+  const parts = [existing, next]
+    .flatMap((s) => s.split(/[,;]+/))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const p of parts) {
+    const k = p.toLowerCase();
+    if (!seen.has(k)) {
+      seen.add(k);
+      out.push(p);
+    }
+  }
+  return out.join(", ");
 }
 
 export type RaffleSheetResult =
@@ -120,6 +143,13 @@ export async function loadRaffleParticipantsFromSheet(
       h.includes("valor depositado") ||
       h.includes("quantia"),
   );
+  const iEmail = findCol(
+    header,
+    (h) =>
+      h.includes("e-mail") ||
+      h.includes("email") ||
+      (h.includes("mail") && h.includes("endereco")),
+  );
 
   if (iTs < 0 || iVal < 0) {
     return {
@@ -131,11 +161,27 @@ export async function loadRaffleParticipantsFromSheet(
   }
 
   const targetYmd = getYesterdayYmd(timeZone);
-  const map = new Map<string, { label: string; tickets: number }>();
+  const map = new Map<
+    string,
+    {
+      label: string;
+      name: string;
+      instagram: string;
+      email: string;
+      tickets: number;
+      submissionCount: number;
+    }
+  >();
 
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
-    const requiredIdx = [iTs, iVal, ...(iName >= 0 ? [iName] : []), ...(iIg >= 0 ? [iIg] : [])];
+    const requiredIdx = [
+      iTs,
+      iVal,
+      ...(iName >= 0 ? [iName] : []),
+      ...(iIg >= 0 ? [iIg] : []),
+      ...(iEmail >= 0 ? [iEmail] : []),
+    ];
     const need = Math.max(...requiredIdx);
     if (!row || row.length <= need) continue;
 
@@ -148,6 +194,7 @@ export async function loadRaffleParticipantsFromSheet(
 
     const name = iName >= 0 ? (row[iName] ?? "").trim() : "";
     const instagram = iIg >= 0 ? (row[iIg] ?? "").trim() : "";
+    const rowEmail = iEmail >= 0 ? (row[iEmail] ?? "").trim() : "";
     const amount = parseDepositUsd(row[iVal] ?? "");
     const tickets = Math.max(0, Math.floor(amount));
     if (tickets < 1) continue;
@@ -156,14 +203,36 @@ export async function loadRaffleParticipantsFromSheet(
     const label = displayLabel(name, instagram);
     const prev = map.get(key);
     if (prev) {
-      map.set(key, { label, tickets: prev.tickets + tickets });
+      map.set(key, {
+        label,
+        name: name || prev.name,
+        instagram: instagram || prev.instagram,
+        email: mergeEmails(prev.email, rowEmail),
+        tickets: prev.tickets + tickets,
+        submissionCount: prev.submissionCount + 1,
+      });
     } else {
-      map.set(key, { label, tickets });
+      map.set(key, {
+        label,
+        name,
+        instagram,
+        email: rowEmail,
+        tickets,
+        submissionCount: 1,
+      });
     }
   }
 
   const participants = [...map.entries()]
-    .map(([key, v]) => ({ key, label: v.label, tickets: v.tickets }))
+    .map(([key, v]) => ({
+      key,
+      label: v.label,
+      name: v.name,
+      instagram: v.instagram,
+      email: v.email,
+      submissionCount: v.submissionCount,
+      tickets: v.tickets,
+    }))
     .sort((a, b) => b.tickets - a.tickets);
 
   const totalTickets = participants.reduce((s, p) => s + p.tickets, 0);

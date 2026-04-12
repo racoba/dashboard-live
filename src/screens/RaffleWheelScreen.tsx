@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CasinoOutlinedIcon from "@mui/icons-material/CasinoOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { WheelDataType } from "react-custom-roulette";
 import { motion } from "framer-motion";
@@ -48,11 +53,21 @@ const PALETTE = [
   "#2dd4bf",
 ];
 
+type ParticipantRow = {
+  key: string;
+  label: string;
+  name: string;
+  instagram: string;
+  email: string;
+  submissionCount: number;
+  tickets: number;
+};
+
 type EntriesPayload = {
   timeZone: string;
   targetYmd: string;
   totalTickets: number;
-  participants: { key: string; label: string; tickets: number }[];
+  participants: ParticipantRow[];
 };
 
 function formatTargetDate(ymd: string, timeZone: string): string {
@@ -68,6 +83,12 @@ function formatTargetDate(ymd: string, timeZone: string): string {
   });
 }
 
+function formatInstagramDisplay(handle: string): string {
+  const h = handle.trim();
+  if (!h) return "—";
+  return h.startsWith("@") ? h : `@${h}`;
+}
+
 export default function RaffleWheelScreen() {
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(0);
@@ -75,6 +96,9 @@ export default function RaffleWheelScreen() {
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<string | null>(null);
   const [payload, setPayload] = useState<EntriesPayload | null>(null);
+  const [winnerOpen, setWinnerOpen] = useState(false);
+  const [winner, setWinner] = useState<ParticipantRow | null>(null);
+  const winningIndexRef = useRef(0);
 
   const loadEntries = useCallback(async () => {
     setLoading(true);
@@ -144,9 +168,21 @@ export default function RaffleWheelScreen() {
   const handleSpin = () => {
     if (mustSpin || !payload || weights.length === 0) return;
     const next = pickWeightedIndex(weights);
+    winningIndexRef.current = next;
     setPrizeNumber(next);
     setMustSpin(true);
   };
+
+  const handleStopSpinning = useCallback(() => {
+    setMustSpin(false);
+    const idx = winningIndexRef.current;
+    const p = payload;
+    const row = p?.participants[idx];
+    if (row) {
+      setWinner(row);
+      setWinnerOpen(true);
+    }
+  }, [payload]);
 
   const dateLabel =
     payload &&
@@ -218,8 +254,14 @@ export default function RaffleWheelScreen() {
 
           {!loading && !error && payload && payload.totalTickets === 0 ? (
             <Alert severity="info" sx={{ mb: 2 }}>
-              Nenhuma inscrição válida para esse dia (valor depositado ≥ US$1 após
-              arredondar para baixo).
+              Nenhuma inscrição válida para o dia das respostas:{" "}
+              <strong>
+                {formatTargetDate(payload.targetYmd, payload.timeZone)}
+              </strong>{" "}
+              (é sempre o dia <strong>anterior</strong> ao de hoje em{" "}
+              {payload.timeZone}). Só contam linhas com carimbo nesse dia, valor
+              depositado ≥ US$1 (inteiro) e datas da planilha em formato{" "}
+              <strong>DD/MM/AAAA</strong>.
             </Alert>
           ) : null}
 
@@ -255,7 +297,7 @@ export default function RaffleWheelScreen() {
                   radiusLineWidth={2}
                   fontSize={14}
                   spinDuration={0.85}
-                  onStopSpinning={() => setMustSpin(false)}
+                  onStopSpinning={handleStopSpinning}
                 />
               </Box>
             </>
@@ -303,6 +345,92 @@ export default function RaffleWheelScreen() {
           </Box>
         </motion.div>
       </Container>
+
+      <Dialog
+        open={winnerOpen}
+        onClose={() => setWinnerOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: "glass.border",
+              bgcolor: "rgba(12,12,16,0.98)",
+              backdropFilter: "blur(16px)",
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "common.white", fontWeight: 700 }}>
+          Sorteado
+        </DialogTitle>
+        <DialogContent dividers sx={{ borderColor: "glass.border" }}>
+          {winner ? (
+            <Stack spacing={2.25}>
+              <Box>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  Nome e sobrenome
+                </Typography>
+                <Typography sx={{ color: "common.white", fontWeight: 600 }}>
+                  {winner.name.trim() || "—"}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  Instagram
+                </Typography>
+                <Typography sx={{ color: "common.white", fontWeight: 600 }}>
+                  {formatInstagramDisplay(winner.instagram)}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  E-mail
+                </Typography>
+                <Typography
+                  sx={{ color: "common.white", fontWeight: 600, wordBreak: "break-word" }}
+                >
+                  {winner.email.trim() || "—"}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  Soma das entradas (tickets)
+                </Typography>
+                <Typography sx={{ color: "primary.light", fontWeight: 700, fontSize: "1.25rem" }}>
+                  {winner.tickets}{" "}
+                  <Typography component="span" variant="body2" sx={{ color: "text.secondary" }}>
+                    (US$1 = 1 ticket na roleta)
+                  </Typography>
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
+                  {winner.submissionCount}{" "}
+                  {winner.submissionCount === 1
+                    ? "linha no formulário nesse dia"
+                    : "linhas no formulário nesse dia (valores somados)"}
+                </Typography>
+              </Box>
+            </Stack>
+          ) : null}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setWinnerOpen(false)}
+            variant="contained"
+            sx={{
+              borderRadius: 999,
+              fontWeight: 700,
+              color: "#0a0a0a",
+              bgcolor: "common.white",
+              "&:hover": { bgcolor: "grey.200" },
+            }}
+          >
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
