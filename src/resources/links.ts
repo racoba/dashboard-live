@@ -24,7 +24,7 @@ export function getRaffleHistorySpreadsheetId(): string {
  */
 export function normalizeGoogleSheetGid(raw: string | undefined): string | undefined {
   if (!raw) return undefined;
-  let s = raw.trim().replace(/^["']|["']$/g, "");
+  const s = raw.trim().replace(/^["']|["']$/g, "");
   if (!s) return undefined;
   const fromParam = s.match(/(?:^|[?#&])gid=(\d+)/i);
   if (fromParam) return fromParam[1];
