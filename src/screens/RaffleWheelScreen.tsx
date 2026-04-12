@@ -76,6 +76,15 @@ function formatInstagramDisplay(handle: string): string {
   return h.startsWith("@") ? h : `@${h}`;
 }
 
+/** Rótulo só na roleta: nome; sem Instagram entre parênteses. */
+function wheelSegmentLabel(p: RaffleParticipant): string {
+  const name = p.name.trim();
+  if (name) return name;
+  const ig = p.instagram.trim().replace(/^@/, "");
+  if (ig) return ig;
+  return "Participante";
+}
+
 export default function RaffleWheelScreen() {
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(0);
@@ -137,7 +146,7 @@ export default function RaffleWheelScreen() {
   const wheelData: WheelDataType[] = useMemo(() => {
     if (!payload?.participants.length) return [];
     return payload.participants.map((p) => ({
-      option: p.label,
+      option: wheelSegmentLabel(p),
       optionSize: p.tickets,
     }));
   }, [payload]);
@@ -284,7 +293,7 @@ export default function RaffleWheelScreen() {
                   radiusLineColor="rgba(255,255,255,0.25)"
                   radiusLineWidth={2}
                   fontSize={14}
-                  spinDuration={0.85}
+                  spinDuration={2}
                   onStopSpinning={handleStopSpinning}
                 />
               </Box>
