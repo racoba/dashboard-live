@@ -75,24 +75,6 @@ export default function SiteTopBar({
     </Box>
   );
 
-  const logo = (
-    <Box
-      component={Link}
-      href="/"
-      aria-label="Início"
-      sx={{
-        width: 44,
-        height: 44,
-        borderRadius: "50%",
-        flexShrink: 0,
-        background:
-          "linear-gradient(135deg, rgba(94,234,212,0.95) 0%, rgba(13,148,136,0.9) 100%)",
-        boxShadow:
-          "0 0 0 1px rgba(255,255,255,0.18) inset, 0 8px 28px rgba(94,234,212,0.25)",
-      }}
-    />
-  );
-
   const adminBtn = (
     <Button
       type="button"
@@ -125,6 +107,7 @@ export default function SiteTopBar({
         position: "sticky",
         top: 0,
         zIndex: 1100,
+        bgcolor: "background.default",
         pt: { xs: 2, sm: 3 },
         pb: 1,
       }}
@@ -132,38 +115,16 @@ export default function SiteTopBar({
       <Container maxWidth="lg">
         <Box
           sx={{
-            display: { xs: "flex", md: "none" },
-            flexDirection: "column",
-            gap: 2,
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: showAdminButton ? "space-between" : "flex-start",
-              gap: 2,
-            }}
-          >
-            {logo}
-            {showAdminButton ? adminBtn : null}
-          </Box>
-          <Box sx={{ display: "flex", justifyContent: "center" }}>{nav}</Box>
-        </Box>
-
-        <Box
-          sx={{
-            display: { xs: "none", md: "grid" },
-            gridTemplateColumns: showAdminButton
-              ? "auto 1fr auto"
-              : "auto 1fr",
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
             alignItems: "center",
+            justifyContent: "center",
             gap: 2,
+            flexWrap: "wrap",
           }}
         >
-          {logo}
-          <Box sx={{ display: "flex", justifyContent: "center", minWidth: 0 }}>
-            <Box sx={{ maxWidth: "100%" }}>{nav}</Box>
+          <Box sx={{ display: "flex", justifyContent: "center", minWidth: 0, maxWidth: "100%" }}>
+            {nav}
           </Box>
           {showAdminButton ? adminBtn : null}
         </Box>

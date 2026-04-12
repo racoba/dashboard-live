@@ -1,5 +1,10 @@
-export const RAFFLE_FORM_URL =
-  "https://forms.gle/YpKpXVmAQMyJ39AA7" as const;
+/**
+ * Onde o visitante cadastra a entrada (formulário ou parceiro).
+ * Sobrescreve com `NEXT_PUBLIC_RAFFLE_ENTRY_URL` no `.env` se precisares de outro link.
+ */
+export const RAFFLE_ENTRY_URL =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_RAFFLE_ENTRY_URL?.trim()) ||
+  "https://forms.gle/YpKpXVmAQMyJ39AA7";
 
 export const RAFFLE_SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1LSYBDkUeZoMEWEp9pSQdI-dx8t-3q6ZkQp9bKI-pG8A/edit?usp=sharing" as const;

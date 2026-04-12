@@ -1,7 +1,7 @@
 import type { MainNavItem } from "@/src/resources/types";
 
 export const MAIN_NAV_PUBLIC = [
-  { href: "/", label: "Inscrição" },
+  { href: "/", label: "Início" },
   { href: "/historico", label: "Histórico de Sorteios" },
 ] as const;
 

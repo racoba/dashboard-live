@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s · Dashboard Live",
   },
   description:
-    "Inscrição no sorteio, histórico e roleta ao vivo. 1$ = 1 ticket.",
+    "Live de CS com sorteios de skins — Racoba. Cupom RACOBA, Twitch e Instagram.",
 };
 
 interface SiteLayoutProps {
