@@ -4,8 +4,8 @@ export const RAFFLE_FORM_URL =
 export const RAFFLE_SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1LSYBDkUeZoMEWEp9pSQdI-dx8t-3q6ZkQp9bKI-pG8A/edit?usp=sharing" as const;
 
-export const RAFFLE_HISTORY_URL =
-  "https://docs.google.com/spreadsheets/d/1f4OTbxUYzCEoTjjQatz4Vv5RmkmZv0rqNJfsp86JePY/edit?usp=sharing" as const;
+/** Mesmo livro que `RAFFLE_SHEET_URL` (aba `historico`). Só muda se usares outra planilha + `NEXT_RAFFLE_HISTORY_SPREADSHEET_ID`. */
+export const RAFFLE_HISTORY_URL = RAFFLE_SHEET_URL;
 
 /** Nome da aba com os sorteios gravados (usado no export CSV via gviz se não houver GID). */
 export const RAFFLE_HISTORY_SHEET_TAB_NAME = "historico" as const;
@@ -32,21 +32,29 @@ export function normalizeGoogleSheetGid(raw: string | undefined): string | undef
 }
 
 /**
- * CSV da planilha de histórico — mesmo padrão do sorteio (`raffleSheet.ts`):
- * com `gid` usa `/export?format=csv&gid=`; sem `gid`, gviz com `sheet=` (primeira aba ≠ histórico).
+ * URLs a tentar por ordem: export+gid (como o sorteio), gviz+gid, gviz+nome da aba, export sem gid (só 1.ª aba).
+ * Ajuda quando um dos endpoints devolve HTML vazio ou erro.
  */
-export function buildRaffleHistoryCsvUrl(
+export function buildRaffleHistoryCsvUrlCandidates(
   spreadsheetId: string,
   opts?: { gid?: string; sheetName?: string },
-): string {
+): string[] {
   const gid = normalizeGoogleSheetGid(opts?.gid);
+  const sheet = opts?.sheetName?.trim() || RAFFLE_HISTORY_SHEET_TAB_NAME;
+  const urls: string[] = [];
   if (gid) {
-    return buildRaffleSheetCsvExportUrl(spreadsheetId, gid);
+    urls.push(buildRaffleSheetCsvExportUrl(spreadsheetId, gid));
+    urls.push(
+      `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&gid=${encodeURIComponent(gid)}`,
+    );
   }
-  const sheet = encodeURIComponent(
-    opts?.sheetName?.trim() || RAFFLE_HISTORY_SHEET_TAB_NAME,
+  urls.push(
+    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`,
   );
-  return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${sheet}`;
+  if (!gid) {
+    urls.push(buildRaffleSheetCsvExportUrl(spreadsheetId));
+  }
+  return [...new Set(urls)];
 }
 
 export function getRaffleSpreadsheetId(): string {
