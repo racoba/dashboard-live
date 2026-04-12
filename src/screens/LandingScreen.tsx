@@ -11,7 +11,7 @@ import Button from "@mui/material/Button";
 import HeroBackdrop from "@/src/components/layout/HeroBackdrop";
 import { RAFFLE_ENTRY_URL } from "@/src/resources/links";
 
-const TWITCH_URL = "https://www.twitch.tv/racoba" as const;
+const TWITCH_URL = "https://www.twitch.tv/racobaldo" as const;
 const INSTAGRAM_URL = "https://www.instagram.com/brunoracoba/" as const;
 
 function TwitchIcon(props: SvgIconProps) {
@@ -224,7 +224,7 @@ export default function LandingScreen() {
                 href={TWITCH_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Canal na Twitch — racoba"
+                aria-label="Canal na Twitch — racobaldo"
                 size="large"
                 sx={{ ...socialIconSx, color: "#9146FF" }}
               >
@@ -243,7 +243,7 @@ export default function LandingScreen() {
               </IconButton>
             </Box>
             <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mt: 1.5 }}>
-              twitch.tv/racoba · @brunoracoba
+              twitch.tv/racobaldo · @brunoracoba
             </Typography>
           </motion.div>
         </Box>

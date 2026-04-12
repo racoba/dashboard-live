@@ -220,7 +220,7 @@ export default function RaffleWheelScreen() {
             <Typography variant="body1" sx={{ color: "text.secondary", mt: 1 }}>
               Cada US$1 depositado no formulário vira 1 ticket na roleta. Só entram
               respostas cujo carimbo de data/hora cai no dia anterior ao de hoje (
-              {payload?.timeZone ?? "America/Sao_Paulo"}).
+              {payload?.timeZone ?? "America/Sao Paulo"}).
             </Typography>
             {dateLabel ? (
               <Typography
