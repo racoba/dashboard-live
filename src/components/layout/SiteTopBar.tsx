@@ -1,13 +1,17 @@
 "use client";
 
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
-import Box from "@mui/material/Box";
+import Box from "@/src/components/mui/Box";
+import Container from "@/src/components/mui/Container";
 import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminGate } from "@/src/components/AdminGateProvider";
 import { getMainNavItems } from "@/src/resources/nav";
+
+interface SiteTopBarProps {
+  showAdminButton?: boolean;
+}
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -34,9 +38,7 @@ const navPillSx = {
 
 export default function SiteTopBar({
   showAdminButton = false,
-}: {
-  showAdminButton?: boolean;
-}) {
+}: SiteTopBarProps) {
   const pathname = usePathname();
   const { unlocked, openAdminDialog } = useAdminGate();
   const navItems = getMainNavItems(unlocked);

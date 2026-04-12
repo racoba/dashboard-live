@@ -19,14 +19,27 @@ export function getRaffleHistorySpreadsheetId(): string {
 }
 
 /**
- * CSV público da planilha de histórico.
- * Preferir `gid` (copiar da URL ao abrir a aba); senão usa o nome da aba no endpoint gviz.
+ * Normaliza o GID copiado da barra de endereço (só dígitos, `gid=…`, fragmento `#gid=…`).
+ * O GID do Google Sheets é numérico; valores que não parecem um GID devolvem `undefined`.
+ */
+export function normalizeGoogleSheetGid(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  let s = raw.trim().replace(/^["']|["']$/g, "");
+  if (!s) return undefined;
+  const fromParam = s.match(/(?:^|[?#&])gid=(\d+)/i);
+  if (fromParam) return fromParam[1];
+  return /^\d+$/.test(s) ? s : undefined;
+}
+
+/**
+ * CSV da planilha de histórico — mesmo padrão do sorteio (`raffleSheet.ts`):
+ * com `gid` usa `/export?format=csv&gid=`; sem `gid`, gviz com `sheet=` (primeira aba ≠ histórico).
  */
 export function buildRaffleHistoryCsvUrl(
   spreadsheetId: string,
   opts?: { gid?: string; sheetName?: string },
 ): string {
-  const gid = opts?.gid?.trim();
+  const gid = normalizeGoogleSheetGid(opts?.gid);
   if (gid) {
     return buildRaffleSheetCsvExportUrl(spreadsheetId, gid);
   }

@@ -6,11 +6,11 @@ import { ThemeProvider } from "@mui/material/styles";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { siteTheme } from "@/src/theme/siteTheme";
 
-export default function MuiAppProvider({
-  children,
-}: {
+interface MuiAppProviderProps {
   children: React.ReactNode;
-}) {
+}
+
+export default function MuiAppProvider({ children }: MuiAppProviderProps) {
   return (
     <AppRouterCacheProvider options={{ key: "mui" }}>
       <ThemeProvider theme={siteTheme}>

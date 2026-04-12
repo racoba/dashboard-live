@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import MuiAppProvider from "@/src/components/MuiAppProvider";
 import "./globals.css";
@@ -22,11 +23,11 @@ export const metadata: Metadata = {
     "Inscrição no sorteio, histórico e roleta ao vivo. 1$ = 1 ticket.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
   return (
     <html
       lang="pt-BR"

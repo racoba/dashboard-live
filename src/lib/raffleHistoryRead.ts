@@ -4,10 +4,31 @@ import {
   getRaffleHistorySpreadsheetId,
 } from "@/src/resources/links";
 import { parseCsv } from "@/src/lib/csvParse";
+import type { RaffleHistoryTableResult } from "@/src/resources/types";
 
-export type RaffleHistoryTableResult =
-  | { ok: true; headers: string[]; rows: string[][] }
-  | { ok: false; error: string; detail?: string };
+/** Mesma ideia que `raffleSheet.ts`: cabeçalho na linha 0, dados abaixo; ignora linhas vazias. */
+function tableFromExportCsvRows(parsed: string[][]): {
+  headers: string[];
+  rows: string[][];
+} {
+  if (parsed.length === 0) {
+    return { headers: [], rows: [] };
+  }
+  const headers = (parsed[0] ?? []).map((c) => c.trim());
+  if (headers.length === 0 || headers.every((h) => h === "")) {
+    return { headers: [], rows: [] };
+  }
+  const colCount = headers.length;
+  const rows: string[][] = [];
+  for (let r = 1; r < parsed.length; r++) {
+    const raw = parsed[r];
+    if (!raw?.length || !raw.some((c) => (c?.trim() ?? "") !== "")) continue;
+    const cells = raw.map((c) => c.trim());
+    while (cells.length < colCount) cells.push("");
+    rows.push(cells.slice(0, colCount));
+  }
+  return { headers, rows };
+}
 
 export async function loadRaffleHistoryTable(): Promise<RaffleHistoryTableResult> {
   let spreadsheetId: string;
@@ -49,20 +70,12 @@ export async function loadRaffleHistoryTable(): Promise<RaffleHistoryTableResult
     return {
       ok: false,
       error: "sheet_not_accessible",
-      detail: `HTTP ${res.status}. Confirme que a planilha está partilhada (leitura) e que o nome da aba ou o GID está correto.`,
+      detail: `HTTP ${res.status}. A planilha precisa estar acessível (ex.: “Qualquer pessoa com o link” como leitor) para exportação CSV, como na aba do sorteio.`,
     };
   }
 
   const text = await res.text();
   const parsed = parseCsv(text);
-  if (parsed.length === 0) {
-    return { ok: true, headers: [], rows: [] };
-  }
-
-  const headers = (parsed[0] ?? []).map((c) => c.trim());
-  const rows = parsed
-    .slice(1)
-    .filter((row) => row.some((cell) => cell.trim() !== ""));
-
+  const { headers, rows } = tableFromExportCsvRows(parsed);
   return { ok: true, headers, rows };
 }

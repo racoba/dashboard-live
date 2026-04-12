@@ -3,21 +3,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CasinoOutlinedIcon from "@mui/icons-material/CasinoOutlined";
 import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
+import Box from "@/src/components/mui/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import Container from "@mui/material/Container";
+import Container from "@/src/components/mui/Container";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import Stack from "@mui/material/Stack";
+import Stack from "@/src/components/mui/Stack";
 import Typography from "@mui/material/Typography";
 import type { WheelDataType } from "react-custom-roulette";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import HeroBackdrop from "@/src/components/layout/HeroBackdrop";
 import { pickWeightedIndex } from "@/src/lib/raffleWheelPick";
+import type {
+  RaffleEntriesPayload,
+  RaffleParticipant,
+} from "@/src/resources/types";
 
 const Wheel = dynamic(
   () => import("react-custom-roulette").then((mod) => mod.Wheel),
@@ -53,23 +57,6 @@ const PALETTE = [
   "#2dd4bf",
 ];
 
-type ParticipantRow = {
-  key: string;
-  label: string;
-  name: string;
-  instagram: string;
-  email: string;
-  submissionCount: number;
-  tickets: number;
-};
-
-type EntriesPayload = {
-  timeZone: string;
-  targetYmd: string;
-  totalTickets: number;
-  participants: ParticipantRow[];
-};
-
 function formatTargetDate(ymd: string, timeZone: string): string {
   const [y, m, d] = ymd.split("-").map((x) => parseInt(x, 10));
   if (!y || !m || !d) return ymd;
@@ -95,9 +82,9 @@ export default function RaffleWheelScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<string | null>(null);
-  const [payload, setPayload] = useState<EntriesPayload | null>(null);
+  const [payload, setPayload] = useState<RaffleEntriesPayload | null>(null);
   const [winnerOpen, setWinnerOpen] = useState(false);
-  const [winner, setWinner] = useState<ParticipantRow | null>(null);
+  const [winner, setWinner] = useState<RaffleParticipant | null>(null);
   const winningIndexRef = useRef(0);
 
   const loadEntries = useCallback(async () => {
@@ -109,7 +96,7 @@ export default function RaffleWheelScreen() {
         credentials: "include",
         cache: "no-store",
       });
-      const data = (await res.json()) as EntriesPayload & {
+      const data = (await res.json()) as RaffleEntriesPayload & {
         error?: string;
         detail?: string;
       };
@@ -204,6 +191,7 @@ export default function RaffleWheelScreen() {
       <HeroBackdrop />
       <Container maxWidth="sm" sx={{ position: "relative", zIndex: 1 }}>
         <motion.div
+          suppressHydrationWarning
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}

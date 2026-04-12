@@ -7,21 +7,17 @@ import {
   useEffect,
   useMemo,
   useState,
+  type ReactNode,
 } from "react";
-
-type AdminGateContextValue = {
-  unlocked: boolean;
-  loading: boolean;
-  dialogOpen: boolean;
-  openAdminDialog: () => void;
-  closeAdminDialog: () => void;
-  refresh: () => Promise<void>;
-  submitHash: (hash: string) => Promise<{ ok: boolean; error?: string }>;
-};
+import type { AdminGateContextValue } from "@/src/resources/types";
 
 const AdminGateContext = createContext<AdminGateContextValue | null>(null);
 
-export function AdminGateProvider({ children }: { children: React.ReactNode }) {
+interface AdminGateProviderProps {
+  children: ReactNode;
+}
+
+export function AdminGateProvider({ children }: AdminGateProviderProps) {
   const [unlocked, setUnlocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);

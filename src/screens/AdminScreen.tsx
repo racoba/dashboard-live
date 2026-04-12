@@ -1,9 +1,9 @@
 "use client";
 
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
+import Box from "@/src/components/mui/Box";
+import Container from "@/src/components/mui/Container";
+import Paper from "@/src/components/mui/Paper";
 import Typography from "@mui/material/Typography";
 import { motion } from "framer-motion";
 import HeroBackdrop from "@/src/components/layout/HeroBackdrop";
@@ -25,6 +25,7 @@ export default function AdminScreen() {
       <HeroBackdrop />
       <Container maxWidth="sm" sx={{ position: "relative", zIndex: 1 }}>
         <motion.div
+          suppressHydrationWarning
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}

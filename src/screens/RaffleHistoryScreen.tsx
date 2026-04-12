@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import HistoryToggleOffOutlinedIcon from "@mui/icons-material/HistoryToggleOffOutlined";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
+import Box from "@/src/components/mui/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
+import Container from "@/src/components/mui/Container";
+import Paper from "@/src/components/mui/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -18,23 +18,16 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { motion } from "framer-motion";
 import HeroBackdrop from "@/src/components/layout/HeroBackdrop";
-import { RAFFLE_HISTORY_URL } from "@/src/resources/links";
-
-type HistoryPayload = {
-  headers: string[];
-  rows: string[][];
-};
+import type { HistoryPayload } from "@/src/resources/types";
 
 export default function RaffleHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [detail, setDetail] = useState<string | null>(null);
   const [data, setData] = useState<HistoryPayload | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setDetail(null);
     try {
       const res = await fetch("/api/raffle/history-rows", { cache: "no-store" });
       const json = (await res.json()) as HistoryPayload & {
@@ -45,12 +38,11 @@ export default function RaffleHistoryScreen() {
         setData(null);
         setError(
           json.error === "sheet_not_accessible"
-            ? "Não foi possível ler a planilha de histórico."
+            ? "Não foi possível carregar o histórico neste momento. Tente mais tarde."
             : json.error === "invalid_history_url"
-              ? "URL de histórico inválida."
+              ? "O histórico está temporariamente indisponível."
               : "Não foi possível carregar o histórico.",
         );
-        setDetail(json.detail ?? null);
         return;
       }
       setData({ headers: json.headers, rows: json.rows });
@@ -93,6 +85,7 @@ export default function RaffleHistoryScreen() {
       <HeroBackdrop />
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
         <motion.div
+          suppressHydrationWarning
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
@@ -120,19 +113,7 @@ export default function RaffleHistoryScreen() {
                 Histórico de sorteios
               </Typography>
               <Typography variant="body1" sx={{ color: "text.secondary", mt: 1 }}>
-                Dados da aba <strong>historico</strong> da planilha ligada em{" "}
-                <code style={{ fontSize: "0.85em" }}>RAFFLE_HISTORY_URL</code>. Ordem:
-                mais recente primeiro.
-              </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary", display: "block", mt: 1 }}>
-                <a
-                  href={RAFFLE_HISTORY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "inherit", textDecoration: "underline" }}
-                >
-                  Abrir planilha no Google Sheets
-                </a>
+                Consulta os resultados dos sorteios. Os mais recentes aparecem primeiro.
               </Typography>
             </Box>
             <Button
@@ -161,11 +142,6 @@ export default function RaffleHistoryScreen() {
           {error ? (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
-              {detail ? (
-                <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-                  {detail}
-                </Typography>
-              ) : null}
             </Alert>
           ) : null}
 
@@ -186,10 +162,10 @@ export default function RaffleHistoryScreen() {
                 sx={{ fontSize: 48, color: "primary.light", mb: 2, opacity: 0.9 }}
               />
               <Typography variant="h6" sx={{ color: "common.white", mb: 1 }}>
-                Nenhuma linha na aba historico
+                Ainda não há registros
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Quando um sorteio for gravado na planilha, as entradas aparecerão aqui.
+                Quando houver sorteios concluídos, os resultados serão listados aqui.
               </Typography>
             </Paper>
           ) : null}

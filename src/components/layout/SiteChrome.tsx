@@ -1,17 +1,20 @@
 "use client";
 
-import Box from "@mui/material/Box";
+import type { ReactNode } from "react";
+import Box from "@/src/components/mui/Box";
 import { AdminGateProvider } from "@/src/components/AdminGateProvider";
 import AdminUnlockDialog from "@/src/components/layout/AdminUnlockDialog";
 import SiteTopBar from "@/src/components/layout/SiteTopBar";
 
+interface SiteChromeProps {
+  children: ReactNode;
+  showAdminButton?: boolean;
+}
+
 export default function SiteChrome({
   children,
   showAdminButton = false,
-}: {
-  children: React.ReactNode;
-  showAdminButton?: boolean;
-}) {
+}: SiteChromeProps) {
   return (
     <AdminGateProvider>
       <Box

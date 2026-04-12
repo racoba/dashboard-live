@@ -2,9 +2,9 @@
 
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import Box from "@mui/material/Box";
+import Box from "@/src/components/mui/Box";
+import Container from "@/src/components/mui/Container";
 import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -45,6 +45,7 @@ export default function LandingScreen() {
           }}
         >
           <motion.div
+            suppressHydrationWarning
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -94,6 +95,7 @@ export default function LandingScreen() {
           </motion.div>
 
           <motion.div
+            suppressHydrationWarning
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.08, ease: "easeOut" }}

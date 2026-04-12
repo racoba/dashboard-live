@@ -4,18 +4,7 @@ import { parseCsv } from "@/src/lib/csvParse";
 import { parseDepositUsd } from "@/src/lib/parseDeposit";
 import { parseFormTimestamp } from "@/src/lib/parseFormTimestamp";
 import { getInstantCalendarYmd, getYesterdayYmd } from "@/src/lib/raffleDates";
-
-export type RaffleParticipant = {
-  key: string;
-  label: string;
-  name: string;
-  instagram: string;
-  email: string;
-  /** Linhas do formulário agregadas neste participante. */
-  submissionCount: number;
-  /** Soma dos tickets (US$ inteiros depositados). */
-  tickets: number;
-};
+import type { RaffleParticipant, RaffleSheetResult } from "@/src/resources/types";
 
 function normalizeHeader(h: string): string {
   return h
@@ -62,16 +51,6 @@ function mergeEmails(existing: string, next: string): string {
   }
   return out.join(", ");
 }
-
-export type RaffleSheetResult =
-  | {
-      ok: true;
-      timeZone: string;
-      targetYmd: string;
-      participants: RaffleParticipant[];
-      totalTickets: number;
-    }
-  | { ok: false; error: string; detail?: string };
 
 export async function loadRaffleParticipantsFromSheet(
   timeZone: string,

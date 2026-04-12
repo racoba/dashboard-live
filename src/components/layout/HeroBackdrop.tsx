@@ -1,6 +1,6 @@
 "use client";
 
-import Box from "@mui/material/Box";
+import Box from "@/src/components/mui/Box";
 import { motion } from "framer-motion";
 
 export default function HeroBackdrop() {
@@ -30,6 +30,7 @@ export default function HeroBackdrop() {
         }}
       />
       <motion.div
+        suppressHydrationWarning
         style={{
           position: "absolute",
           top: "-18%",
@@ -45,6 +46,7 @@ export default function HeroBackdrop() {
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
+        suppressHydrationWarning
         style={{
           position: "absolute",
           bottom: "-12%",
