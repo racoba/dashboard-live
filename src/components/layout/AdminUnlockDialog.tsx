@@ -11,9 +11,9 @@ import TextField from "@mui/material/TextField";
 import { useAdminGate } from "@/src/components/AdminGateProvider";
 
 const errorMessages: Record<string, string> = {
-  invalid: "Hash incorreto.",
-  invalid_hash: "Hash incorreto.",
-  not_configured: "Servidor sem NEXT_ADMIN_HASH configurado.",
+  invalid: "Senha incorreta.",
+  invalid_hash: "Senha incorreta.",
+  not_configured: "Servidor sem senha configurada.",
   network: "Não foi possível conectar. Tente de novo.",
 };
 
@@ -65,8 +65,7 @@ export default function AdminUnlockDialog() {
       </DialogTitle>
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
         <Alert severity="info" sx={{ bgcolor: "rgba(94,234,212,0.12)", color: "primary.light" }}>
-          Informe o hash configurado em <code>NEXT_ADMIN_HASH</code> para liberar a área do
-          sorteio neste dispositivo.
+          Informe a senha para liberar a interface de administração.
         </Alert>
         {errorKey ? (
           <Alert severity="error">
