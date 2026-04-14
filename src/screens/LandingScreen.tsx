@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Box from "@/src/components/mui/Box";
 import Container from "@/src/components/mui/Container";
 import IconButton from "@mui/material/IconButton";
@@ -10,6 +11,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Button from "@mui/material/Button";
 import HeroBackdrop from "@/src/components/layout/HeroBackdrop";
 import { RAFFLE_ENTRY_URL } from "@/src/resources/links";
+import type { RafflePhotoPayload } from "@/src/resources/types";
 
 const TWITCH_URL = "https://www.twitch.tv/racobaldo" as const;
 const INSTAGRAM_URL = "https://www.instagram.com/brunoracoba/" as const;
@@ -49,6 +51,29 @@ const socialIconSx = {
 } as const;
 
 export default function LandingScreen() {
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/raffle/photo", { cache: "no-store" });
+        const json = (await res.json()) as RafflePhotoPayload & {
+          error?: string;
+          detail?: string;
+        };
+        console.log(json);
+        if (!res.ok) return;
+        if (!cancelled) setPhotoUrl(json.imageUrl ?? null);
+      } catch {
+        // Non-blocking: homepage can render without the photo.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <Box
       component="main"
@@ -161,6 +186,34 @@ export default function LandingScreen() {
                 RACOBA
               </Box>
             </Box>
+
+            {photoUrl ? (
+              <Box
+                sx={{
+                  mt: 2.5,
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Box
+                  component="img"
+                  alt="Skin do sorteio de hoje"
+                  src={photoUrl}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  sx={{
+                    width: "min(520px, 100%)",
+                    maxHeight: 320,
+                    objectFit: "contain",
+                    borderRadius: 2.5,
+                    border: "1px solid",
+                    borderColor: "glass.border",
+                    bgcolor: "rgba(255,255,255,0.03)",
+                    boxShadow: "0 16px 56px rgba(0,0,0,0.45)",
+                  }}
+                />
+              </Box>
+            ) : null}
           </motion.div>
 
           <Box sx={{ width: "100%", maxWidth: 560, mx: "auto", textAlign: "center" }}>

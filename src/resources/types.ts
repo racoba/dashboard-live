@@ -39,6 +39,12 @@ export type RaffleEntriesPayload = {
   participants: RaffleParticipant[];
 };
 
+export type RafflePhotoPayload = {
+  timeZone: string;
+  targetYmd: string;
+  imageUrl: string | null;
+};
+
 export type AdminGateContextValue = {
   unlocked: boolean;
   loading: boolean;

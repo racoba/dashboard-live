@@ -22,6 +22,7 @@ import { pickWeightedIndex } from "@/src/lib/raffleWheelPick";
 import type {
   RaffleEntriesPayload,
   RaffleParticipant,
+  RafflePhotoPayload,
 } from "@/src/resources/types";
 
 const Wheel = dynamic(
@@ -93,6 +94,24 @@ export default function RaffleWheelScreen() {
   const [winner, setWinner] = useState<RaffleParticipant | null>(null);
   const winningIndexRef = useRef(0);
   const [selectedYmd, setSelectedYmd] = useState<string>("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
+  const loadPhoto = useCallback(async (dateYmd: string) => {
+    try {
+      const url = new URL("/api/raffle/photo", window.location.origin);
+      const d = dateYmd.trim();
+      if (d) url.searchParams.set("date", d);
+      const res = await fetch(url.toString(), { cache: "no-store" });
+      const json = (await res.json()) as RafflePhotoPayload & {
+        error?: string;
+        detail?: string;
+      };
+      if (!res.ok) return;
+      setPhotoUrl(json.imageUrl ?? null);
+    } catch {
+      // Non-blocking: wheel can work without the image.
+    }
+  }, []);
 
   const loadEntries = useCallback(async (opts?: { dateYmd?: string }) => {
     setLoading(true);
@@ -134,13 +153,14 @@ export default function RaffleWheelScreen() {
         participants: data.participants,
       });
       setSelectedYmd((prev) => prev || data.targetYmd);
+      void loadPhoto(opts?.dateYmd?.trim() || data.targetYmd);
     } catch {
       setPayload(null);
       setError("Falha de rede ao carregar inscrições.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadPhoto]);
 
   useEffect(() => {
     void loadEntries();
@@ -225,20 +245,10 @@ export default function RaffleWheelScreen() {
               respostas cujo carimbo de data/hora cai no dia selecionado (
               {payload?.timeZone ?? "America/Sao Paulo"}).
             </Typography>
-            {dateLabel ? (
-              <Typography
-                variant="subtitle2"
-                sx={{ color: "primary.light", mt: 1.5, fontWeight: 600 }}
-              >
-                Sorteando inscrições de: {dateLabel}
-              </Typography>
-            ) : null}
-          </Box>
-
-          <Stack
+            <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={1.25}
-            sx={{ mb: 2, alignItems: { xs: "stretch", sm: "center" } }}
+            sx={{ mb: 2, mt: 2, alignItems: { xs: "stretch", sm: "center" } }}
           >
             <TextField
               label="Data do sorteio"
@@ -279,6 +289,44 @@ export default function RaffleWheelScreen() {
               Verificar
             </Button>
           </Stack>
+            {dateLabel ? (
+              <Typography
+                variant="subtitle2"
+                sx={{ color: "primary.light", mt: 1.5, fontWeight: 600 }}
+              >
+                Sorteando inscrições de: {dateLabel}
+              </Typography>
+            ) : null}
+
+            {photoUrl ? (
+              <Box
+                sx={{
+                  mt: 2,
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Box
+                  component="img"
+                  alt="Skin sendo sorteada"
+                  src={photoUrl}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  sx={{
+                    width: "min(440px, 100%)",
+                    maxHeight: 260,
+                    objectFit: "contain",
+                    borderRadius: 2.5,
+                    border: "1px solid",
+                    borderColor: "glass.border",
+                    bgcolor: "rgba(255,255,255,0.03)",
+                  }}
+                />
+              </Box>
+            ) : null}
+          </Box>
+
+          
 
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
