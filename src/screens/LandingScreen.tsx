@@ -62,7 +62,6 @@ export default function LandingScreen() {
           error?: string;
           detail?: string;
         };
-        console.log(json);
         if (!res.ok) return;
         if (!cancelled) setPhotoUrl(json.imageUrl ?? null);
       } catch {
@@ -193,8 +192,14 @@ export default function LandingScreen() {
                   mt: 2.5,
                   display: "flex",
                   justifyContent: "center",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 2,
                 }}
               >
+                <Typography variant="h5" sx={{ color: "text.primary", fontWeight: 700 }}>
+                  Sorteio do dia {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                </Typography>
                 <Box
                   component="img"
                   alt="Skin do sorteio de hoje"
