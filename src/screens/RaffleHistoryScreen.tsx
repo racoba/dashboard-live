@@ -20,6 +20,31 @@ import { motion } from "framer-motion";
 import HeroBackdrop from "@/src/components/layout/HeroBackdrop";
 import type { HistoryPayload } from "@/src/resources/types";
 
+function normalizeHeaderKey(h: string): string {
+  return h
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .trim();
+}
+
+function headerIsHidden(h: string): boolean {
+  const k = normalizeHeaderKey(h);
+  return (
+    k.includes("instagram") ||
+    k.includes("insta") ||
+    k.includes("e-mail") ||
+    k === "email" ||
+    k.includes("email") ||
+    (k.includes("mail") && k.includes("endereco"))
+  );
+}
+
+function headerIsSkin(h: string): boolean {
+  const k = normalizeHeaderKey(h);
+  return k === "skin" || k.includes("skin sorteada") || (k.includes("skin") && k.includes("sorte"));
+}
+
 export default function RaffleHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +88,31 @@ export default function RaffleHistoryScreen() {
     return [...data.rows].reverse();
   }, [data?.rows]);
 
+  const visible = useMemo(() => {
+    const headers = data?.headers ?? [];
+    const rows = rowsNewestFirst;
+
+    const keepIdx: number[] = [];
+    for (let i = 0; i < headers.length; i++) {
+      const h = headers[i] ?? "";
+      if (!headerIsHidden(h)) keepIdx.push(i);
+    }
+
+    const visibleHeaders = keepIdx.map((i) => headers[i]?.trim() || `Coluna ${i + 1}`);
+    const visibleRows = rows.map((r) => keepIdx.map((i) => (r[i]?.trim() ?? "")));
+
+    const hasSkin = visibleHeaders.some((h) => headerIsSkin(h));
+    if (!hasSkin) {
+      visibleHeaders.push("Skin");
+      for (const r of visibleRows) r.push("");
+    }
+
+    return { headers: visibleHeaders, rows: visibleRows };
+  }, [data?.headers, rowsNewestFirst]);
+
   const colCount = Math.max(
-    data?.headers.length ?? 0,
-    ...rowsNewestFirst.map((r) => r.length),
+    visible.headers.length ?? 0,
+    ...visible.rows.map((r) => r.length),
     1,
   );
 
@@ -196,13 +243,13 @@ export default function RaffleHistoryScreen() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {data.headers[i]?.trim() || `Coluna ${i + 1}`}
+                        {visible.headers[i]?.trim() || `Coluna ${i + 1}`}
                       </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rowsNewestFirst.map((row, ri) => (
+                  {visible.rows.map((row, ri) => (
                     <TableRow key={ri} hover sx={{ "& td": { color: "grey.100" } }}>
                       {Array.from({ length: colCount }, (_, ci) => (
                         <TableCell

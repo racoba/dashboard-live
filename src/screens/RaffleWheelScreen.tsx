@@ -12,6 +12,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@/src/components/mui/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { WheelDataType } from "react-custom-roulette";
 import { motion } from "framer-motion";
@@ -60,14 +61,10 @@ const PALETTE = [
 function formatTargetDate(ymd: string, timeZone: string): string {
   const [y, m, d] = ymd.split("-").map((x) => parseInt(x, 10));
   if (!y || !m || !d) return ymd;
-  const utc = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
-  return utc.toLocaleDateString("pt-BR", {
-    timeZone,
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  // Avoid locale/ICU differences between server and client that can cause hydration mismatches.
+  // The date we display is already a calendar day (YYYY-MM-DD).
+  void timeZone;
+  return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
 }
 
 function formatInstagramDisplay(handle: string): string {
@@ -95,13 +92,18 @@ export default function RaffleWheelScreen() {
   const [winnerOpen, setWinnerOpen] = useState(false);
   const [winner, setWinner] = useState<RaffleParticipant | null>(null);
   const winningIndexRef = useRef(0);
+  const [selectedYmd, setSelectedYmd] = useState<string>("");
 
-  const loadEntries = useCallback(async () => {
+  const loadEntries = useCallback(async (opts?: { dateYmd?: string }) => {
     setLoading(true);
     setError(null);
     setDetail(null);
     try {
-      const res = await fetch("/api/raffle/entries", {
+      const url = new URL("/api/raffle/entries", window.location.origin);
+      const dateYmd = opts?.dateYmd?.trim() ?? "";
+      if (dateYmd) url.searchParams.set("date", dateYmd);
+
+      const res = await fetch(url.toString(), {
         credentials: "include",
         cache: "no-store",
       });
@@ -131,6 +133,7 @@ export default function RaffleWheelScreen() {
         totalTickets: data.totalTickets,
         participants: data.participants,
       });
+      setSelectedYmd((prev) => prev || data.targetYmd);
     } catch {
       setPayload(null);
       setError("Falha de rede ao carregar inscrições.");
@@ -219,7 +222,7 @@ export default function RaffleWheelScreen() {
             </Typography>
             <Typography variant="body1" sx={{ color: "text.secondary", mt: 1 }}>
               Cada US$1 depositado no formulário vira 1 ticket na roleta. Só entram
-              respostas cujo carimbo de data/hora cai no dia anterior ao de hoje (
+              respostas cujo carimbo de data/hora cai no dia selecionado (
               {payload?.timeZone ?? "America/Sao Paulo"}).
             </Typography>
             {dateLabel ? (
@@ -231,6 +234,51 @@ export default function RaffleWheelScreen() {
               </Typography>
             ) : null}
           </Box>
+
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.25}
+            sx={{ mb: 2, alignItems: { xs: "stretch", sm: "center" } }}
+          >
+            <TextField
+              label="Data do sorteio"
+              type="date"
+              value={selectedYmd}
+              onChange={(e) => setSelectedYmd(e.target.value)}
+              size="small"
+              fullWidth
+              slotProps={{
+                inputLabel: { shrink: true },
+              }}
+              sx={{
+                "& .MuiInputBase-root": { bgcolor: "rgba(255,255,255,0.04)" },
+                "& input": {
+                  color: "common.white",
+                  colorScheme: "dark",
+                },
+                "& input::-webkit-calendar-picker-indicator": {
+                  filter: "invert(1)",
+                  opacity: 0.95,
+                  cursor: "pointer",
+                },
+                "& .MuiInputLabel-root": { color: "text.secondary" },
+              }}
+            />
+            <Button
+              variant="outlined"
+              onClick={() => void loadEntries({ dateYmd: selectedYmd })}
+              disabled={loading}
+              sx={{
+                borderRadius: 999,
+                whiteSpace: "nowrap",
+                borderColor: "glass.border",
+                color: "common.white",
+                "&:hover": { borderColor: "primary.light" },
+              }}
+            >
+              Verificar
+            </Button>
+          </Stack>
 
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
@@ -255,9 +303,8 @@ export default function RaffleWheelScreen() {
               <strong>
                 {formatTargetDate(payload.targetYmd, payload.timeZone)}
               </strong>{" "}
-              (é sempre o dia <strong>anterior</strong> ao de hoje em{" "}
-              {payload.timeZone}). Só contam linhas com carimbo nesse dia, valor
-              depositado ≥ US$1 (inteiro) e datas da planilha em formato{" "}
+              . Só contam linhas com carimbo nesse dia, valor depositado ≥ US$1
+              (inteiro) e datas da planilha em formato{" "}
               <strong>DD/MM/AAAA</strong>.
             </Alert>
           ) : null}
@@ -269,7 +316,6 @@ export default function RaffleWheelScreen() {
                 sx={{ color: "text.secondary", textAlign: "center", mb: 2 }}
               >
                 {payload.participants.length} participante(s) ·{" "}
-                {payload.totalTickets} ticket(s) no total
               </Typography>
               <Box
                 sx={{
@@ -333,7 +379,7 @@ export default function RaffleWheelScreen() {
             {!loading && !error ? (
               <Button
                 size="small"
-                onClick={() => void loadEntries()}
+                onClick={() => void loadEntries({ dateYmd: selectedYmd })}
                 sx={{ color: "text.secondary" }}
               >
                 Atualizar dados da planilha

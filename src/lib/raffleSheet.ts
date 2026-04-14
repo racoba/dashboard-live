@@ -6,6 +6,10 @@ import { parseFormTimestamp } from "@/src/lib/parseFormTimestamp";
 import { getInstantCalendarYmd, getYesterdayYmd } from "@/src/lib/raffleDates";
 import type { RaffleParticipant, RaffleSheetResult } from "@/src/resources/types";
 
+function isValidYmd(ymd: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(ymd);
+}
+
 function normalizeHeader(h: string): string {
   return h
     .toLowerCase()
@@ -18,7 +22,9 @@ function findCol(header: string[], predicate: (h: string) => boolean): number {
   return header.findIndex((cell) => predicate(normalizeHeader(cell)));
 }
 
-function participantKey(name: string, instagram: string): string {
+function participantKey(name: string, instagram: string, email: string): string {
+  const em = email.trim().toLowerCase();
+  if (em) return `email:${em}`;
   const ig = instagram.trim().replace(/^@/, "").toLowerCase();
   if (ig) return `ig:${ig}`;
   return `name:${name.trim().toLowerCase()}`;
@@ -55,6 +61,7 @@ function mergeEmails(existing: string, next: string): string {
 export async function loadRaffleParticipantsFromSheet(
   timeZone: string,
   sheetGid?: string,
+  targetYmd?: string,
 ): Promise<RaffleSheetResult> {
   let spreadsheetId: string;
   try {
@@ -139,7 +146,8 @@ export async function loadRaffleParticipantsFromSheet(
     };
   }
 
-  const targetYmd = getYesterdayYmd(timeZone);
+  const resolvedTargetYmd =
+    targetYmd && isValidYmd(targetYmd) ? targetYmd : getYesterdayYmd(timeZone);
   const map = new Map<
     string,
     {
@@ -169,7 +177,7 @@ export async function loadRaffleParticipantsFromSheet(
     if (!submitted) continue;
 
     const rowYmd = getInstantCalendarYmd(submitted, timeZone);
-    if (rowYmd !== targetYmd) continue;
+    if (rowYmd !== resolvedTargetYmd) continue;
 
     const name = iName >= 0 ? (row[iName] ?? "").trim() : "";
     const instagram = iIg >= 0 ? (row[iIg] ?? "").trim() : "";
@@ -178,7 +186,7 @@ export async function loadRaffleParticipantsFromSheet(
     const tickets = Math.max(0, Math.floor(amount));
     if (tickets < 1) continue;
 
-    const key = participantKey(name, instagram);
+    const key = participantKey(name, instagram, rowEmail);
     const label = displayLabel(name, instagram);
     const prev = map.get(key);
     if (prev) {
@@ -219,7 +227,7 @@ export async function loadRaffleParticipantsFromSheet(
   return {
     ok: true,
     timeZone,
-    targetYmd,
+    targetYmd: resolvedTargetYmd,
     participants,
     totalTickets,
   };

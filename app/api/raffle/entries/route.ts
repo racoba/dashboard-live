@@ -6,7 +6,11 @@ import {
 } from "@/src/lib/adminGate";
 import { loadRaffleParticipantsFromSheet } from "@/src/lib/raffleSheet";
 
-export async function GET() {
+function isValidYmd(ymd: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(ymd);
+}
+
+export async function GET(req: Request) {
   const secret = process.env.NEXT_ADMIN_HASH;
   const store = await cookies();
   const token = store.get(ADMIN_GATE_COOKIE)?.value;
@@ -17,7 +21,11 @@ export async function GET() {
   const timeZone = process.env.NEXT_RAFFLE_TIMEZONE ?? "America/Sao_Paulo";
   const gid = process.env.NEXT_RAFFLE_SHEET_GID?.trim() || undefined;
 
-  const result = await loadRaffleParticipantsFromSheet(timeZone, gid);
+  const url = new URL(req.url);
+  const rawDate = url.searchParams.get("date")?.trim() || "";
+  const targetYmd = rawDate && isValidYmd(rawDate) ? rawDate : undefined;
+
+  const result = await loadRaffleParticipantsFromSheet(timeZone, gid, targetYmd);
 
   if (!result.ok) {
     return NextResponse.json(
