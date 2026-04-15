@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   },
   description:
     "Live de CS com sorteios de skins — Racoba. Cupom RACOBA, Twitch e Instagram.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 interface RootLayoutProps {
