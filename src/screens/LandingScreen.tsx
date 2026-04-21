@@ -146,7 +146,7 @@ export default function LandingScreen() {
               }}
             >
               Acompanhe streams de CS e conteúdos de aposta.
-              Use o cupom abaixo no CSGO.NET para participar de sorteios diários e concorrer a uma skin todos os dias.
+              Use o cupom abaixo no CSGO.NET para ganhar 20% de bonus no depósito e participar de sorteios diários, concorrendo a uma skin todos os dias.
             </Typography>
             <Box
               sx={{

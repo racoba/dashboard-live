@@ -160,7 +160,7 @@ export default function RaffleHistoryScreen() {
                 Histórico de sorteios
               </Typography>
               <Typography variant="body1" sx={{ color: "text.secondary", mt: 1 }}>
-                Consulta os resultados dos sorteios. Os mais recentes aparecem primeiro.
+                Consulte os resultados dos sorteios.
               </Typography>
             </Box>
             <Button
