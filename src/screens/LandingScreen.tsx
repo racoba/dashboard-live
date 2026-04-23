@@ -232,7 +232,7 @@ export default function LandingScreen() {
               }}
             >
               Para cadastrar sua entrada clique no botão abaixo. A cada US$1 depositado, você recebe 1 ticket para
-              o sorteio.
+              o sorteio. Minimo de 10 tickets totais para o sorteio ser realizado.
             </Typography>
             <Button
               component="a"
